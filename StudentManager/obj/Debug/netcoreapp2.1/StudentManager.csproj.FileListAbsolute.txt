@@ -1,0 +1,14 @@
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\bin\Debug\netcoreapp2.1\StudentManager.deps.json
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\bin\Debug\netcoreapp2.1\StudentManager.runtimeconfig.json
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\bin\Debug\netcoreapp2.1\StudentManager.runtimeconfig.dev.json
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\bin\Debug\netcoreapp2.1\StudentManager.dll
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\bin\Debug\netcoreapp2.1\StudentManager.pdb
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\obj\Debug\netcoreapp2.1\StudentManager.csprojAssemblyReference.cache
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\obj\Debug\netcoreapp2.1\StudentManager.csproj.CoreCompileInputs.cache
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\obj\Debug\netcoreapp2.1\StudentManager.RazorAssemblyInfo.cache
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\obj\Debug\netcoreapp2.1\StudentManager.RazorAssemblyInfo.cs
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\obj\Debug\netcoreapp2.1\StudentManager.AssemblyInfoInputs.cache
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\obj\Debug\netcoreapp2.1\StudentManager.AssemblyInfo.cs
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\obj\Debug\netcoreapp2.1\StudentManager.RazorTargetAssemblyInfo.cache
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\obj\Debug\netcoreapp2.1\StudentManager.dll
+D:\Kallol\myProjects\dotNet\RnD\StudentManager\StudentManager\obj\Debug\netcoreapp2.1\StudentManager.pdb
