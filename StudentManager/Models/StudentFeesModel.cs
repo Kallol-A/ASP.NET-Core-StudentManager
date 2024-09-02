@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace WebApi.Models
 {
@@ -14,8 +15,8 @@ namespace WebApi.Models
 
         public string fees_for_month { get; set; }
         public string fees_for_year { get; set; }
-        public string fee_amount { get; set; }
-        public string feebook_entry_done { get; set; }
+        public decimal fee_amount { get; set; }
+        public bool feebook_entry_done { get; set; }
         public string created_by_user { get; set; }
         public string last_updated_by_user { get; set; }
         public string deleted_by_user { get; set; }
@@ -23,8 +24,10 @@ namespace WebApi.Models
         public DateTime? updated_at { get; set; }
         public DateTime? deleted_at { get; set; }
 
-        // Foreign key
+        [ForeignKey("Student")]
         public long id_student { get; set; }
-        public Student Student { get; set; } // Navigation property for the reference to Student
+        
+        // Navigation property for the reference to Student
+        public virtual Student Student { get; set; }
     }
 }
