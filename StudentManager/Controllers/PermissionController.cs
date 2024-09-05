@@ -5,10 +5,11 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using WebApi.Models;
-using WebApi.Services;
 
-namespace WebApi.Controllers
+using StudentManager.Models;
+using StudentManager.Services;
+
+namespace StudentManager.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -38,7 +39,7 @@ namespace WebApi.Controllers
                 return BadRequest("Invalid input data.");
             }
 
-            bool result = _permissionService.AddPermission(inputModel.permission, inputModel.created_by_user);
+            bool result = _permissionService.AddPermission(inputModel.permission_name, inputModel.created_by_user);
 
             if (result)
             {

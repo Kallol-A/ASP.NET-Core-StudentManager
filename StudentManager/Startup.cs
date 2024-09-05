@@ -9,14 +9,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.EntityFrameworkCore;
 
-using WebApi.Services;
-using WebApi.Repositories;
-using WebApi.Data;
-using WebApi.Middleware;
+using StudentManager.Services;
+using StudentManager.Repositories;
+using StudentManager.Data;
+using StudentManager.Middleware;
 
 
 
-namespace WebApi
+namespace StudentManager
 {
     public class Startup
     {
@@ -66,13 +66,12 @@ namespace WebApi
                 };
             });
 
-            services.AddScoped<ICategoryService, StudentCategoryService>();
-            services.AddScoped<IPasswordHasherService, PasswordHasherService>();
             services.AddScoped<IRoleService, RoleService>();
             services.AddScoped<IPermissionService, PermissionService>();
+            services.AddScoped<IPasswordHasherService, PasswordHasherService>();
+            services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserService, UserService>();
-            services.AddScoped<IStudentService, StudentService>();
-            services.AddScoped<IStudentRepository, StudentRepository>();
+
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

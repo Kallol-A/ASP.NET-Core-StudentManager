@@ -5,14 +5,14 @@ using System.Threading.Tasks;
 
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApi.Models
+namespace StudentManager.Models
 {
     public class Role
     {
         [Key]
         public long id_role { get; set; }
 
-        public string role { get; set; }
+        public string role_name { get; set; }
         public string created_by_user { get; set; }
         public string last_updated_by_user { get; set; }
         public string deleted_by_user { get; set; }

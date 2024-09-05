@@ -1,20 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
-using WebApi.Data;
-using WebApi.Models;
-using WebApi.DTOs;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Builder;
 
-namespace WebApi.Middleware
+using System.IdentityModel.Tokens.Jwt;
+using StudentManager.Repositories;
+
+namespace StudentManager.Middleware
 {
     public class PermissionMiddleware
     {
@@ -27,103 +25,70 @@ namespace WebApi.Middleware
             _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
         }
 
-        public async Task InvokeAsync(HttpContext context, AppDbContext dbContext)
+        public async Task InvokeAsync(HttpContext context)
         {
-            if (context.Request.Path.StartsWithSegments("/api/auth/user/register") ||
-                context.Request.Path.StartsWithSegments("/api/auth/user/login") ||
-                context.Request.Path.StartsWithSegments("/api/auth/student/login"))
+            //Exception Block of Permission Middleware
+            var bypassPaths = new List<Regex>
+            {
+                new Regex("^/api/auth/user/register$", RegexOptions.IgnoreCase),
+                new Regex("^/api/auth/user/login$", RegexOptions.IgnoreCase)
+            };
+
+            if (bypassPaths.Any(regex => regex.IsMatch(context.Request.Path.Value)))
             {
                 await _next(context);
                 return;
             }
+            //End --- Exception Block of Permission Middleware
 
-            var userClaims = context.User.Claims;
-            var roleIDClaim = userClaims.FirstOrDefault(c => c.Type == "roleID");
-            var studentIDClaim = userClaims.FirstOrDefault(c => c.Type == "studentID");
-
-            if (roleIDClaim != null && long.TryParse(roleIDClaim.Value, out var roleID))
+            var authorizationHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+            if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
             {
-                var permissions = await GetRolePermissionsAsync(roleID);
-
-                if (context.Request.Path.StartsWithSegments("/api/student/detail_by_id") && context.Request.Method == "POST")
-                {
-                    context.Request.EnableBuffering(); // Enable buffering to read the body multiple times
-
-                    // Read the studentId from the request body
-                    var requestBody = await new StreamReader(context.Request.Body).ReadToEndAsync();
-
-                    context.Request.Body.Position = 0; // Reset the stream position for the next read
-
-                    var studentId = JsonConvert.DeserializeObject<StudentIdDto>(requestBody)?.StudentId;
-
-                    if (studentIDClaim != null && studentId != null && long.TryParse(studentIDClaim.Value, out var studentID) && studentID == studentId)
-                    {
-                        // If the student is trying to access their own details, allow the request
-                        await _next(context);
-                        return;
-                    }
-                }
-
-                // Check if the user has the necessary permission for the current request
-                if (CheckPermission(context.Request.Method, permissions))
-                {
-                    await _next(context);
-                    return;
-                }
-
-                context.Response.StatusCode = 403; // Forbidden
-                await context.Response.WriteAsync("Unauthorized access: Not Permitted");
+                context.Response.StatusCode = 401; // Unauthorized
+                await context.Response.WriteAsync("Unauthorized access: Missing or invalid token");
                 return;
             }
 
-            context.Response.StatusCode = 401; // Unauthorized
-            await context.Response.WriteAsync("Unauthorized access: Invalid Token");
-        }
+            var token = authorizationHeader.Substring("Bearer ".Length).Trim();
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadToken(token) as JwtSecurityToken;
 
-        private async Task<string[]> GetRolePermissionsAsync(long roleId)
-        {
-            using (var scope = _serviceScopeFactory.CreateScope())
+            if (jwtToken == null)
             {
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                var permissionIds = await dbContext.RolePermissions
-                    .Where(rp => rp.id_role == roleId)
-                    .Select(rp => rp.id_permission)
-                    .ToArrayAsync();
-
-                var permissions = await dbContext.Permissions
-                    .Where(p => permissionIds.Contains(p.id_permission))
-                    .Select(p => p.permission)
-                    .ToArrayAsync();
-
-                return permissions;
+                context.Response.StatusCode = 401; // Unauthorized
+                await context.Response.WriteAsync("Unauthorized access: Invalid token");
+                return;
             }
-        }
 
-        private static bool CheckPermission(string method, string[] permissions)
-        {
-            // Your logic to check if the user has the necessary permission based on the request method
-            // Example logic: Check if the requested method is allowed for the given permissions
-            var operation = GetOperationForMethod(method);
+            var roleIDClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "roleID");
 
-            return permissions.Any(p => p.Equals(operation, StringComparison.OrdinalIgnoreCase));
-        }
-
-        private static string GetOperationForMethod(string method)
-        {
-            switch (method.ToUpper())
+            if (roleIDClaim != null && long.TryParse(roleIDClaim.Value, out var roleID))
             {
-                case "GET":
-                    return "Read";
-                case "POST":
-                    return "Create";
-                case "PUT":
-                    return "Update";
-                case "DELETE":
-                    return "Delete";
-                default:
-                    return string.Empty;
+                // Use a scope to resolve the IUserRepository
+                using (var scope = _serviceScopeFactory.CreateScope())
+                {
+                    var _userService = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+
+                    if (roleID == 1)
+                    {
+                        context.Items["FilteredUsers"] = _userService.GetUsersAsync();
+                    }
+                    else if (roleID == 2)
+                    {
+                        context.Items["FilteredUsers"] = _userService.GetUsersByRole(2);
+                    }
+                    else
+                    {
+                        context.Items["FilteredUsers"] = _userService.GetUsersExceptRole(1);
+                    }
+                }
+
+                await _next(context);
+                return;
             }
+
+            context.Response.StatusCode = 403; // Forbidden
+            await context.Response.WriteAsync("Unauthorized access: Not Permitted");
         }
     }
 

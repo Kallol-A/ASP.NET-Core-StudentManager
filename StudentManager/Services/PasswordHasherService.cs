@@ -7,14 +7,8 @@ using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace WebApi.Services
+namespace StudentManager.Services
 {
-    public interface IPasswordHasherService
-    {
-        string HashPassword(string password);
-        bool VerifyPassword(string hashedPassword, string providedPassword);
-    }
-
     public class PasswordHasherService : IPasswordHasherService
     {
         private const int IterationCount = 10000; // Adjust based on your security needs

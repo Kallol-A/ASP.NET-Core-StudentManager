@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
-using WebApi.Models;
-using WebApi.Services;
+using StudentManager.DTOs;
+using StudentManager.Models;
+using StudentManager.Services;
 
-namespace WebApi.Controllers
+namespace StudentManager.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -24,9 +25,29 @@ namespace WebApi.Controllers
 
         // GET api/user
         [HttpGet]
-        public ActionResult<IEnumerable<string>> Get()
+        public async Task<ActionResult<IEnumerable<UserDTO>>> Get()
         {
-            var users = _userService.GetAllUsers();
+            // Retrieve the filtered users from HttpContext.Items
+            var filteredUsers = HttpContext.Items["FilteredUsers"] as List<User>;
+
+            // If the filtered list is available, convert it to DTOs and return it
+            if (filteredUsers != null)
+            {
+                var userDTOs = filteredUsers.Select(user => new UserDTO
+                {
+                    // Map properties from User to UserDTO
+                    UserId = user.id_user,
+                    RoleId = user.id_role,
+                    UserEmail = user.user_email,
+                    UserPhone = user.user_phone,
+                    RoleName = user.Role.role_name
+                }).ToList();
+
+                return Ok(userDTOs);
+            }
+
+            // Fallback if no filtered list is available (shouldn't happen)
+            var users = await _userService.GetUsersAsync();
             return Ok(users);
         }
     }

@@ -17,7 +17,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "WebApi": {
+    "StudentManager": {
       "commandName": "Project",
       "launchBrowser": false,
       "launchUrl": "api/studentcategory",

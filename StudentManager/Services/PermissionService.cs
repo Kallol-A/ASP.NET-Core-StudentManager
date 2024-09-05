@@ -1,21 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
-using WebApi.Data;
-using WebApi.Models;
+using StudentManager.Data;
+using StudentManager.Models;
 
-namespace WebApi.Services
+namespace StudentManager.Services
 {
-    public interface IPermissionService
-    {
-        bool AddPermission(string Permission, string createdBy);
-        bool LinkPermission(long RoleId, long PermissionId, string createdBy);
-
-        IEnumerable<Permission> GetAllPermissions();
-    }
-
     public class PermissionService : IPermissionService
     {
         private readonly AppDbContext _dbContext;
@@ -32,7 +24,7 @@ namespace WebApi.Services
             {
                 var _permission = new Permission
                 {
-                    permission = Permission,
+                    permission_name = Permission,
                     created_by_user = createdBy,
                     created_at = DateTime.Now
                 };

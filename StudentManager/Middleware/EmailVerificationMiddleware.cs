@@ -1,15 +1,17 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using WebApi.Data;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Collections.Generic;
 using System.Security.Claims;
-using System;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 
-namespace WebApi.Middleware
+using Microsoft.AspNetCore.Http;
+using Microsoft.IdentityModel.Tokens;
+
+using StudentManager.Data;
+
+namespace StudentManager.Middleware
 {
     public class EmailVerificationMiddleware
     {
@@ -24,8 +26,7 @@ namespace WebApi.Middleware
         {
             // Exclude middleware for specific paths (signup and login)
             if (context.Request.Path.StartsWithSegments("/api/auth/user/register") ||
-                context.Request.Path.StartsWithSegments("/api/auth/user/login") ||
-                context.Request.Path.StartsWithSegments("/api/auth/student/login"))
+                context.Request.Path.StartsWithSegments("/api/auth/user/login"))
             {
                 await _next(context);
                 return;
@@ -55,10 +56,8 @@ namespace WebApi.Middleware
                     return;
                 }
 
-                // Check if the student with the given email exists
-                var student = dbContext.Students.SingleOrDefault(Student => Student.student_email == result);
                 var user = dbContext.Users.SingleOrDefault(User => User.user_email == result);
-                if (student != null|| user != null)
+                if (user != null)
                 {
                     // Student found, proceed with the request
                     await _next(context);

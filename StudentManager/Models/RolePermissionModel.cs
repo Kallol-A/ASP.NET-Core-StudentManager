@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 using System.ComponentModel.DataAnnotations;
 
-namespace WebApi.Models
+namespace StudentManager.Models
 {
     public class RolePermission
     {
