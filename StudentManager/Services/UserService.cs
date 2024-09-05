@@ -127,6 +127,24 @@ namespace StudentManager.Services
             return userDTOs;
         }
 
+        public IEnumerable<UserDTO> GetLoggedInStudentDetails(long userId)
+        {
+            // Fetch users from the repository
+            var users = _userRepository.GetUsersExceptRole(roleId);
+
+            // Map the User entities to UserDTO objects
+            var userDTOs = users.Select(u => new UserDTO
+            {
+                UserId = u.id_user,         // id_user is the primary key in the User entity
+                RoleId = u.id_role,         // id_role is the foreign key related to Role entity
+                UserPhone = u.user_phone,
+                UserEmail = u.user_email,
+                RoleName = u.Role.role_name // Navigation property Role and role_name in Role entity
+            });
+
+            return userDTOs;
+        }
+
         private async Task<string> GenerateJwtToken(string userPhone, string userEmail)
         {
             // Fetch the user information, including the role, from the repository

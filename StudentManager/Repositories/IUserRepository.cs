@@ -16,5 +16,6 @@ namespace StudentManager.Repositories
         Task<IEnumerable<User>> GetUsersAsync();
         IEnumerable<User> GetUsersByRole(long roleId);
         IEnumerable<User> GetUsersExceptRole(long roleId);
+        IEnumerable<User> GetLoggedInStudentDetails(long userId);
     }
 }

@@ -70,5 +70,13 @@ namespace StudentManager.Repositories
                 .Include(u => u.Role)  // Eagerly load the Role navigation property if needed
                 .ToList();
         }
+
+        public IEnumerable<User> GetLoggedInStudentDetails(long userId)
+        {
+            return _dbContext.Users
+                .Where(u => u.id_user != userId && u.deleted_at == null)
+                //.Include(u => u.de)  // Eagerly load the Role navigation property if needed
+                .ToList();
+        }
     }
 }

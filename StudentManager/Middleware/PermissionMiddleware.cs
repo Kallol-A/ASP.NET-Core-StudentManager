@@ -3,14 +3,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Builder;
 
-using System.IdentityModel.Tokens.Jwt;
-using StudentManager.Repositories;
+using StudentManager.Services;
 
 namespace StudentManager.Middleware
 {
@@ -60,14 +60,19 @@ namespace StudentManager.Middleware
                 return;
             }
 
-            var roleIDClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "roleID");
+            var userIDClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "userID");
+            if (userIDClaim != null && int.TryParse(userIDClaim.Value, out var userID))
+            {
+                context.Session.SetInt32("UserID", userID);
+            }
 
+            var roleIDClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "roleID");
             if (roleIDClaim != null && long.TryParse(roleIDClaim.Value, out var roleID))
             {
-                // Use a scope to resolve the IUserRepository
+                // Use a scope to resolve the IUserService
                 using (var scope = _serviceScopeFactory.CreateScope())
                 {
-                    var _userService = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+                    var _userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
                     if (roleID == 1)
                     {

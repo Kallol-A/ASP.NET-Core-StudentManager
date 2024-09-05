@@ -17,5 +17,6 @@ namespace StudentManager.Services
         Task<IEnumerable<UserDTO>> GetUsersAsync();
         IEnumerable<UserDTO> GetUsersByRole(long roleId);
         IEnumerable<UserDTO> GetUsersExceptRole(long roleId);
+        IEnumerable<LoggedStudentDTO> GetLoggedInStudentDetails(long userId);
     }
 }

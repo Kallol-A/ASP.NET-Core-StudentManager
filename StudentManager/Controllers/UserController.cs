@@ -28,22 +28,30 @@ namespace StudentManager.Controllers
         public async Task<ActionResult<IEnumerable<UserDTO>>> Get()
         {
             // Retrieve the filtered users from HttpContext.Items
-            var filteredUsers = HttpContext.Items["FilteredUsers"] as List<User>;
+            var filteredUsers = HttpContext.Items["FilteredUsers"] as IEnumerable<UserDTO>;
 
             // If the filtered list is available, convert it to DTOs and return it
             if (filteredUsers != null)
             {
-                var userDTOs = filteredUsers.Select(user => new UserDTO
-                {
-                    // Map properties from User to UserDTO
-                    UserId = user.id_user,
-                    RoleId = user.id_role,
-                    UserEmail = user.user_email,
-                    UserPhone = user.user_phone,
-                    RoleName = user.Role.role_name
-                }).ToList();
+                return Ok(filteredUsers);
+            }
 
-                return Ok(userDTOs);
+            // Fallback if no filtered list is available (shouldn't happen)
+            var users = await _userService.GetUsersAsync();
+            return Ok(users);
+        }
+
+        // GET api/user/logged_user_detail
+        [HttpGet("logged_student_detail")]
+        public async Task<ActionResult<IEnumerable<LoggedStudentDTO>>> GetLoggedInStudentDetails()
+        {
+            // Retrieve the filtered users from HttpContext.Items
+            var loggedStudentDetails = "hello";
+
+            // If the filtered list is available, convert it to DTOs and return it
+            if (loggedStudentDetails != null)
+            {
+                return Ok(loggedStudentDetails);
             }
 
             // Fallback if no filtered list is available (shouldn't happen)

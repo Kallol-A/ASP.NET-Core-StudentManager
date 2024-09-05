@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,8 +14,6 @@ using StudentManager.Services;
 using StudentManager.Repositories;
 using StudentManager.Data;
 using StudentManager.Middleware;
-
-
 
 namespace StudentManager
 {
@@ -46,6 +45,14 @@ namespace StudentManager
             services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"))
             );
+            
+            // Add session services
+            services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(1800); // Set session timeout duration
+                options.Cookie.HttpOnly = true; // Make the session cookie HTTP-only
+                options.Cookie.IsEssential = true; // Essential for GDPR compliance
+            });
 
             services.AddAuthentication(options =>
             {
@@ -82,6 +89,7 @@ namespace StudentManager
                 app.UseDeveloperExceptionPage();
             }
             app.UseCors("ReactAppPolicy");
+            app.UseSession(); // Enable session middleware
             app.UseAuthentication();
             app.UseMiddleware<EmailVerificationMiddleware>();
             app.UseMiddleware<PermissionMiddleware>();
