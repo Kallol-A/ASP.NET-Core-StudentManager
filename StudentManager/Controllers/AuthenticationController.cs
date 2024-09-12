@@ -47,7 +47,7 @@ namespace StudentManager.Controllers
                 return BadRequest("Invalid input data.");
             }
 
-            bool result = _userService.AddUser(inputModel.id_role, inputModel.user_phone, inputModel.user_email,
+            bool result = _userService.InsertUser(inputModel.id_role, inputModel.user_phone, inputModel.user_email,
                 inputModel.user_password, inputModel.created_by_user);
 
             if (result)
@@ -56,7 +56,7 @@ namespace StudentManager.Controllers
             }
             else
             {
-                return BadRequest("Failed to add user.");
+                return BadRequest("Failed to register new user.");
             }
         }
     }

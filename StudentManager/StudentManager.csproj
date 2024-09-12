@@ -6,22 +6,15 @@
 
   <ItemGroup>
     <Compile Remove="Controllers\StudentCategoryController.cs" />
-    <Compile Remove="Controllers\StudentController.cs" />
     <Compile Remove="Controllers\TestController.cs" />
     <Compile Remove="DTOs\StudentCategoryDto.cs" />
-    <Compile Remove="DTOs\StudentDto.cs" />
-    <Compile Remove="Models\StudentCategoryModel.cs" />
-    <Compile Remove="Models\StudentDetailsModel.cs" />
+    <Compile Remove="DTOs\StudentDTO.cs" />
     <Compile Remove="Models\StudentDTOModel.cs" />
-    <Compile Remove="Models\StudentFeesModel.cs" />
     <Compile Remove="Models\StudentModel.cs" />
-    <Compile Remove="Repositories\IStudentRepository.cs" />
-    <Compile Remove="Repositories\StudentRepository.cs" />
     <Compile Remove="Services\AuthenticationService.cs" />
     <Compile Remove="Services\ICategoryService.cs" />
-    <Compile Remove="Services\IStudentService.cs" />
     <Compile Remove="Services\StudentCategoryService.cs" />
-    <Compile Remove="Services\StudentService.cs" />
+    <Compile Remove="Services\UserDetailsDTO.cs" />
   </ItemGroup>
 
   <ItemGroup>

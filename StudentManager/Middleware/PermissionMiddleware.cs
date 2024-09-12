@@ -6,11 +6,11 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.EntityFrameworkCore;
 
-using StudentManager.Services;
+using StudentManager.Data; // Assuming you have a DbContext for accessing the database
 
 namespace StudentManager.Middleware
 {
@@ -27,7 +27,7 @@ namespace StudentManager.Middleware
 
         public async Task InvokeAsync(HttpContext context)
         {
-            //Exception Block of Permission Middleware
+            // Exception Block of Permission Middleware
             var bypassPaths = new List<Regex>
             {
                 new Regex("^/api/auth/user/register$", RegexOptions.IgnoreCase),
@@ -39,7 +39,7 @@ namespace StudentManager.Middleware
                 await _next(context);
                 return;
             }
-            //End --- Exception Block of Permission Middleware
+            // End --- Exception Block of Permission Middleware
 
             var authorizationHeader = context.Request.Headers["Authorization"].FirstOrDefault();
             if (string.IsNullOrEmpty(authorizationHeader) || !authorizationHeader.StartsWith("Bearer "))
@@ -60,40 +60,71 @@ namespace StudentManager.Middleware
                 return;
             }
 
+            // Extract user ID and role ID from JWT token
             var userIDClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "userID");
-            if (userIDClaim != null && int.TryParse(userIDClaim.Value, out var userID))
-            {
-                context.Session.SetInt32("UserID", userID);
-            }
-
             var roleIDClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == "roleID");
-            if (roleIDClaim != null && long.TryParse(roleIDClaim.Value, out var roleID))
+
+            if (userIDClaim == null || roleIDClaim == null || !long.TryParse(userIDClaim.Value, out var userID) || !int.TryParse(roleIDClaim.Value, out var roleID))
             {
-                // Use a scope to resolve the IUserService
-                using (var scope = _serviceScopeFactory.CreateScope())
-                {
-                    var _userService = scope.ServiceProvider.GetRequiredService<IUserService>();
-
-                    if (roleID == 1)
-                    {
-                        context.Items["FilteredUsers"] = _userService.GetUsersAsync();
-                    }
-                    else if (roleID == 2)
-                    {
-                        context.Items["FilteredUsers"] = _userService.GetUsersByRole(2);
-                    }
-                    else
-                    {
-                        context.Items["FilteredUsers"] = _userService.GetUsersExceptRole(1);
-                    }
-                }
-
-                await _next(context);
+                context.Response.StatusCode = 401; // Unauthorized
+                await context.Response.WriteAsync("Unauthorized access: Invalid user or role ID");
                 return;
             }
 
-            context.Response.StatusCode = 403; // Forbidden
-            await context.Response.WriteAsync("Unauthorized access: Not Permitted");
+            // Determine the permission based on HTTP method
+            var method = context.Request.Method.ToUpper();
+            long permissionId = 0;
+            switch (method)
+            {
+                case "POST":
+                    permissionId = 1;
+                    break;
+                case "GET":
+                    permissionId = 2;
+                    break;
+                case "PUT":
+                    permissionId = 3;
+                    break;
+                case "DELETE":
+                    permissionId = 4;
+                    break;
+                case "PATCH":
+                    permissionId = 5;
+                    break;
+                default:
+                    permissionId = 0;
+                    break;
+            }
+
+
+            if (permissionId == 0)
+            {
+                context.Response.StatusCode = 403; // Forbidden
+                await context.Response.WriteAsync("Unauthorized access: Invalid HTTP method");
+                return;
+            }
+
+            using (var scope = _serviceScopeFactory.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>(); // Your DbContext
+
+                // Check if the role has the required permission
+                var hasPermission = await dbContext.RolePermissions
+                    .Where(rp => rp.id_role == roleID && rp.id_permission == permissionId && rp.deleted_at == null)
+                    .Include(rp => rp.Role)
+                    .Include(rp => rp.Permission)
+                    .AnyAsync();
+
+                if (!hasPermission)
+                {
+                    context.Response.StatusCode = 403; // Forbidden
+                    await context.Response.WriteAsync("Unauthorized access: Not Permitted");
+                    return;
+                }
+            }
+
+            // If everything is okay, pass on to the next flow
+            await _next(context);
         }
     }
 

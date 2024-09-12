@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
+
 
 namespace StudentManager.DTOs
 {
@@ -28,10 +26,11 @@ namespace StudentManager.DTOs
         public long UserId { get; set; }
         public string StudentPhone { get; set; }
         public string StudentEmail { get; set; }
-        public List<StudentDetailsDTO> StudentDetails { get; set; }
+        public List<StudentDetailDTO> StudentDetails { get; set; }
+        public List<StudentFeesDTO> StudentFees { get; set; }
     }
 
-    public class StudentDetailsDTO
+    public class StudentDetailDTO
     {
         public long StudentDetailsId { get; set; }
         public string StudentFirstName { get; set; }
@@ -51,5 +50,14 @@ namespace StudentManager.DTOs
     {
         public long StudentCategoryId { get; set; }
         public string StudentCategoryName { get; set; }
+    }
+
+    public class StudentFeesDTO
+    {
+        public long StudentFeesId { get; set; }
+        public string FeesForMonth { get; set; }
+        public string FeesForYear { get; set; }
+        public decimal FeeAmount { get; set; }
+        public bool FeeBookEntryDone { get; set; }
     }
 }

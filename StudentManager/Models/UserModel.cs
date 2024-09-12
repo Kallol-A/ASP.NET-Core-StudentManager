@@ -28,7 +28,8 @@ namespace StudentManager.Models
 
         // Navigation property
         public virtual Role Role { get; set; }
-
+        public virtual StudentDetails StudentDetails { get; set; } // One-to-One Relationship with StudentDetails
+        public virtual ICollection<StudentFees> StudentFees { get; set; } // One-to-Many Relationship with StudentFees
     }
 
     public class LoginResult

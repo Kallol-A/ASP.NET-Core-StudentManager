@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace WebApi.Models
+namespace StudentManager.Models
 {
     public class StudentFees
     {
@@ -24,10 +24,10 @@ namespace WebApi.Models
         public DateTime? updated_at { get; set; }
         public DateTime? deleted_at { get; set; }
 
-        [ForeignKey("Student")]
-        public long id_student { get; set; }
+        [ForeignKey("User")]
+        public long id_user { get; set; }
         
         // Navigation property for the reference to Student
-        public virtual Student Student { get; set; }
+        public virtual User Student { get; set; }
     }
 }

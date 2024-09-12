@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 using StudentManager.DTOs;
-using StudentManager.Models;
 using StudentManager.Services;
 
 namespace StudentManager.Controllers
@@ -18,6 +14,7 @@ namespace StudentManager.Controllers
     {
         private readonly IUserService _userService;
 
+        // Constructor
         public UserController(IUserService userService)
         {
             _userService = userService;
@@ -27,13 +24,24 @@ namespace StudentManager.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDTO>>> Get()
         {
-            // Retrieve the filtered users from HttpContext.Items
-            var filteredUsers = HttpContext.Items["FilteredUsers"] as IEnumerable<UserDTO>;
-
-            // If the filtered list is available, convert it to DTOs and return it
-            if (filteredUsers != null)
+            var roleIDClaim = User.FindFirst("roleID");
+            if (roleIDClaim != null && long.TryParse(roleIDClaim.Value, out var roleID))
             {
-                return Ok(filteredUsers);
+                if (roleID == 1)
+                {
+                    var filteredUsers = await _userService.GetUsersAsync();
+                    return Ok(filteredUsers);
+                }
+                else if (roleID == 2)
+                {
+                    var filteredUsers = _userService.GetUsersByRole(2);
+                    return Ok(filteredUsers);
+                }
+                else
+                {
+                    var filteredUsers = _userService.GetUsersExceptRole(1);
+                    return Ok(filteredUsers);
+                }
             }
 
             // Fallback if no filtered list is available (shouldn't happen)
@@ -41,22 +49,32 @@ namespace StudentManager.Controllers
             return Ok(users);
         }
 
-        // GET api/user/logged_user_detail
+        // GET api/user/logged_student_detail
         [HttpGet("logged_student_detail")]
-        public async Task<ActionResult<IEnumerable<LoggedStudentDTO>>> GetLoggedInStudentDetails()
+        public async Task<ActionResult<LoggedStudentDTO>> GetLoggedStudentDetailsAsync()
         {
-            // Retrieve the filtered users from HttpContext.Items
-            var loggedStudentDetails = "hello";
-
-            // If the filtered list is available, convert it to DTOs and return it
-            if (loggedStudentDetails != null)
+            var roleIDClaim = User.FindFirst("roleID");
+            if (roleIDClaim == null || !int.TryParse(roleIDClaim.Value, out var roleID) || roleID != 2)
             {
-                return Ok(loggedStudentDetails);
+                return NotFound("Logged user is not a student.");
             }
 
-            // Fallback if no filtered list is available (shouldn't happen)
-            var users = await _userService.GetUsersAsync();
-            return Ok(users);
+            // Extract userID from the JWT token in the Authorization Header
+            var userIDClaim = User.FindFirst("userID");
+            if (userIDClaim == null || !long.TryParse(userIDClaim.Value, out var userID))
+            {
+                return Unauthorized();
+            }
+
+            // Get the user details from the service
+            var LoggedStudentDTO = await _userService.GetLoggedStudentDetailAsync(userID);
+
+            if (LoggedStudentDTO == null)
+            {
+                return NotFound("No records found");
+            }
+
+            return Ok(LoggedStudentDTO);
         }
     }
 }

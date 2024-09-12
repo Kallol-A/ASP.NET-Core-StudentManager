@@ -16,13 +16,14 @@ namespace StudentManager.Repositories
         private readonly AppDbContext _dbContext;
         private readonly IPasswordHasherService _passwordHasherService;
 
+        // Constructor
         public UserRepository(AppDbContext dbContext, IPasswordHasherService passwordHasherService)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _passwordHasherService = passwordHasherService ?? throw new ArgumentNullException(nameof(passwordHasherService));
         }
 
-        public void AddUser(User user)
+        public void InsertUser(User user)
         {
             var validUser = user ?? throw new ArgumentNullException(nameof(user));
             validUser.user_password = _passwordHasherService.HashPassword(validUser.user_password);
@@ -71,12 +72,17 @@ namespace StudentManager.Repositories
                 .ToList();
         }
 
-        public IEnumerable<User> GetLoggedInStudentDetails(long userId)
+        public async Task<StudentDetails> GetLoggedStudentDetailAsync(long userId)
         {
-            return _dbContext.Users
-                .Where(u => u.id_user != userId && u.deleted_at == null)
-                //.Include(u => u.de)  // Eagerly load the Role navigation property if needed
-                .ToList();
+            // Fetch the student details along with related data using Entity Framework
+            var studentDetail = await _dbContext.StudentDetails
+                .Where(sd => sd.id_user == userId && sd.deleted_at == null)
+                .Include(sd => sd.Student)                        // Load the Student navigation property
+                    .ThenInclude(s => s.StudentFees)              // Load the StudentFees navigation property within Student
+                .Include(sd => sd.StudentCategory)                // Load the StudentCategory navigation property
+                .FirstOrDefaultAsync();                           // Retrieve the first or default student details
+
+            return studentDetail;
         }
     }
 }

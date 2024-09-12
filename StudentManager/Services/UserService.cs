@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Http;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 using System.IdentityModel.Tokens.Jwt;
@@ -29,7 +27,7 @@ namespace StudentManager.Services
             _passwordHasherService = passwordHasherService ?? throw new ArgumentNullException(nameof(passwordHasherService));
         }
 
-        public bool AddUser(long roleID, string userPhone, string userEmail, string userPassword, string createdBy)
+        public bool InsertUser(long roleID, string userPhone, string userEmail, string userPassword, string createdBy)
         {
             try
             {
@@ -45,7 +43,7 @@ namespace StudentManager.Services
                 };
 
                 // Add user through repository
-                _userRepository.AddUser(_user);
+                _userRepository.InsertUser(_user);
                 _userRepository.Save();
 
                 return true; // Operation succeeded
@@ -127,22 +125,59 @@ namespace StudentManager.Services
             return userDTOs;
         }
 
-        public IEnumerable<UserDTO> GetLoggedInStudentDetails(long userId)
+        public async Task<LoggedStudentDTO> GetLoggedStudentDetailAsync(long userId)
         {
             // Fetch users from the repository
-            var users = _userRepository.GetUsersExceptRole(roleId);
+            var StudentDetails = await _userRepository.GetLoggedStudentDetailAsync(userId);
 
-            // Map the User entities to UserDTO objects
-            var userDTOs = users.Select(u => new UserDTO
+            if (StudentDetails == null)
             {
-                UserId = u.id_user,         // id_user is the primary key in the User entity
-                RoleId = u.id_role,         // id_role is the foreign key related to Role entity
-                UserPhone = u.user_phone,
-                UserEmail = u.user_email,
-                RoleName = u.Role.role_name // Navigation property Role and role_name in Role entity
-            });
+                return null;
+            }
 
-            return userDTOs;
+            // Map the fetched data to the DTOs
+            var loggedStudentDTO = new LoggedStudentDTO
+            {
+                UserId = StudentDetails.id_user,
+                StudentPhone = StudentDetails.Student.user_phone,
+                StudentEmail = StudentDetails.Student.user_email,
+                StudentDetails = new List<StudentDetailDTO>
+                {
+                    new StudentDetailDTO
+                    {
+                        StudentDetailsId = StudentDetails.id_student_details,
+                        StudentFirstName = StudentDetails.student_first_name,
+                        StudentMiddleName = StudentDetails.student_middle_name,
+                        StudentLastName = StudentDetails.student_last_name,
+                        StudentAddress1 = StudentDetails.student_address1,
+                        StudentAddress2 = StudentDetails.student_address2,
+                        StudentCity = StudentDetails.student_city,
+                        StudentDistrict = StudentDetails.student_district,
+                        StudentState = StudentDetails.student_state,
+                        StudentPIN = StudentDetails.student_pin,
+                        StudentFeebookGiven = StudentDetails.student_feebook_given,
+                        StudentCategory = new List<StudentCategoryDTO>
+                        {
+                            new StudentCategoryDTO
+                            {
+                                StudentCategoryId = StudentDetails.StudentCategory.id_student_category,
+                                StudentCategoryName = StudentDetails.StudentCategory.student_category_name
+                            }
+                        }
+                    }
+                },
+                StudentFees = StudentDetails.Student.StudentFees
+                    .Select(fees => new StudentFeesDTO
+                    {
+                        StudentFeesId = fees.id_student_fees,
+                        FeesForMonth = fees.fees_for_month,
+                        FeesForYear = fees.fees_for_year,
+                        FeeAmount = fees.fee_amount,
+                        FeeBookEntryDone = fees.feebook_entry_done
+                    }).ToList()
+            };
+
+            return loggedStudentDTO;
         }
 
         private async Task<string> GenerateJwtToken(string userPhone, string userEmail)
@@ -171,7 +206,7 @@ namespace StudentManager.Services
                 new Claim(ClaimTypes.MobilePhone, userPhone),
                 new Claim(ClaimTypes.Role, role.role_name),
                 // Add more claims as needed
-                new Claim("userID", role.id_role.ToString()),
+                new Claim("userID", user.id_user.ToString()),
                 new Claim("roleID", role.id_role.ToString()),
             };
 
