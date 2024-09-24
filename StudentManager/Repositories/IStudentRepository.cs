@@ -9,8 +9,11 @@ namespace StudentManager.Repositories
     public interface IStudentRepository
     {
         void InsertStudentCategoryAsync(StudentCategory studentcategory);
-        Task<bool> SaveAsync();
-        Task<IEnumerable<StudentCategory>> GetStudentCategoriesAsync(long? id);
         void UpdateStudentCategoryAsync(StudentCategory studentcategory);
+        void InsertStudentDetailsAsync(StudentDetails studentdetails);
+        Task<bool> SaveAsync();
+
+        Task<IEnumerable<StudentCategory>> GetStudentCategoriesAsync(long? id);
+        Task<StudentDetails> GetLoggedStudentDetailAsync(long id);
     }
 }

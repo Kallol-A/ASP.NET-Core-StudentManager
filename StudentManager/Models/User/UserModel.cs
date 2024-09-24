@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -29,6 +26,7 @@ namespace StudentManager.Models
         // Navigation property
         public virtual Role Role { get; set; }
         public virtual StudentDetails StudentDetails { get; set; } // One-to-One Relationship with StudentDetails
+        public virtual FacultyDetails FacultyDetails { get; set; } // One-to-One Relationship with FacultyDetails
         public virtual ICollection<StudentFees> StudentFees { get; set; } // One-to-Many Relationship with StudentFees
     }
 

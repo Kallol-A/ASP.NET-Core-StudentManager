@@ -11,41 +11,36 @@ using StudentManager.Services;
 
 namespace StudentManager.Repositories
 {
-    public class UserRepository : IUserRepository
+    public class UserRepository : BaseRepository, IUserRepository
     {
-        private readonly AppDbContext _dbContext;
+        private new readonly AppDbContext _dbContext;
         private readonly IPasswordHasherService _passwordHasherService;
 
         // Constructor
-        public UserRepository(AppDbContext dbContext, IPasswordHasherService passwordHasherService)
+        public UserRepository(AppDbContext dbContext, IPasswordHasherService passwordHasherService) : base(dbContext)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
             _passwordHasherService = passwordHasherService ?? throw new ArgumentNullException(nameof(passwordHasherService));
         }
 
-        public void InsertUser(User user)
+        public async void InsertUserAsync(User user)
         {
             var validUser = user ?? throw new ArgumentNullException(nameof(user));
             validUser.user_password = _passwordHasherService.HashPassword(validUser.user_password);
-            _dbContext.Users
-                .Add(validUser);
-        }
-
-        public void Save()
-        {
-            _dbContext.SaveChanges();
+            await _dbContext.Users.AddAsync(validUser);
         }
 
         public async Task<User> FindByEmailAsync(string userEmail)
         {
             return await _dbContext.Users
+                .Include(u => u.Role)
                 .FirstOrDefaultAsync(u => u.user_email == userEmail && u.deleted_at == null);
         }
 
-        public async Task<Role> GetUserRole(long id_role)
+        public async Task<Role> GetUserRole(long roleId)
         {
             return await _dbContext.Roles
-                .FirstOrDefaultAsync(r => r.id_role == id_role);
+                .FirstOrDefaultAsync(r => r.id_role == roleId);
         }
 
         public async Task<IEnumerable<User>> GetUsersAsync()
@@ -56,10 +51,17 @@ namespace StudentManager.Repositories
                 .ToListAsync();
         }
 
-        public IEnumerable<User> GetUsersByRole(long roleId)
+        public Task<User> GetUserById(long userId)
         {
             return _dbContext.Users
-                .Where(u => u.id_role == roleId && u.deleted_at == null)
+                .Where(u => u.id_user == userId && u.deleted_at == null)
+                .FirstOrDefaultAsync();
+        }
+
+        public IEnumerable<User> GetUsersByRole(List<long> roleIds)
+        {
+            return _dbContext.Users
+                .Where(u => roleIds.Contains(u.id_role) && u.deleted_at == null)
                 .Include(u => u.Role)  // Eagerly load the Role navigation property if needed
                 .ToList();
         }
@@ -70,19 +72,6 @@ namespace StudentManager.Repositories
                 .Where(u => u.id_role != roleId && u.deleted_at == null)
                 .Include(u => u.Role)  // Eagerly load the Role navigation property if needed
                 .ToList();
-        }
-
-        public async Task<StudentDetails> GetLoggedStudentDetailAsync(long userId)
-        {
-            // Fetch the student details along with related data using Entity Framework
-            var studentDetail = await _dbContext.StudentDetails
-                .Where(sd => sd.id_user == userId && sd.deleted_at == null)
-                .Include(sd => sd.Student)                        // Load the Student navigation property
-                    .ThenInclude(s => s.StudentFees)              // Load the StudentFees navigation property within Student
-                .Include(sd => sd.StudentCategory)                // Load the StudentCategory navigation property
-                .FirstOrDefaultAsync();                           // Retrieve the first or default student details
-
-            return studentDetail;
         }
     }
 }

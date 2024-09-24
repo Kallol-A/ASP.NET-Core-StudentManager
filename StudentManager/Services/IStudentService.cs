@@ -8,8 +8,12 @@ namespace StudentManager.Services
 {
     public interface IStudentService
     {
-        Task<bool> InsertStudentCategoryAsync(string studentCategoryName, string createdBy);
+        Task<bool> IsStudent(StudentDetails studentdetails);
+        Task<bool> InsertStudentDetailsAsync(StudentDetails studentdetails);
+        Task<bool> InsertStudentCategoryAsync(StudentCategory studentcategory);
+        Task<bool> UpdateStudentCategoryAsync(long id_student_category, StudentCategory studentcategory);
+
         Task<IEnumerable<StudentCategoryDTO>> GetStudentCategoriesAsync(long? id);
-        Task<bool> UpdateStudentCategoryAsync(long id_student_category, string student_category_name, string last_updated_by_user);
+        Task<LoggedStudentDTO> GetLoggedStudentDetailAsync(long id);
     }
 }

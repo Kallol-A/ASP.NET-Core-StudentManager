@@ -27,26 +27,26 @@ namespace StudentManager.Services
             _passwordHasherService = passwordHasherService ?? throw new ArgumentNullException(nameof(passwordHasherService));
         }
 
-        public bool InsertUser(long roleID, string userPhone, string userEmail, string userPassword, string createdBy)
+        public async Task<bool> InsertUserAsync(User user)
         {
             try
             {
                 // Create a new User object
                 var _user = new User
                 {
-                    id_role = roleID,
-                    user_phone = userPhone,
-                    user_email = userEmail,
-                    user_password = userPassword,  // Password will be hashed in the repository
-                    created_by_user = createdBy,
+                    id_role = user.id_role,
+                    user_phone = user.user_phone,
+                    user_email = user.user_email,
+                    user_password = user.user_password,  // Password will be hashed in the repository
+                    created_by_user = user.created_by_user,
                     created_at = DateTime.Now
                 };
 
                 // Add user through repository
-                _userRepository.InsertUser(_user);
-                _userRepository.Save();
+                _userRepository.InsertUserAsync(_user);
+                var result = await _userRepository.SaveAsync();
 
-                return true; // Operation succeeded
+                return result; // Operation succeeded
             }
             catch (Exception ex)
             {
@@ -57,14 +57,14 @@ namespace StudentManager.Services
             }
         }
 
-        public async Task<LoginResult> LoginUser(string userEmail, string userPassword)
+        public async Task<LoginResult> LoginUser(User user)
         {
-            var user = await _userRepository.FindByEmailAsync(userEmail);
+            var validuser = await _userRepository.FindByEmailAsync(user.user_email);
 
-            if (user != null && _passwordHasherService.VerifyPassword(user.user_password, userPassword))
+            if (validuser != null && _passwordHasherService.VerifyPassword(validuser.user_password, user.user_password))
             {
                 // Await the GenerateJwtToken method to get the token
-                var token = await GenerateJwtToken(user.user_phone, userEmail);
+                var token = GenerateJwtToken(validuser);
                 return new LoginResult { Success = true, Token = token, Message = "Login successful" };
             }
 
@@ -89,10 +89,10 @@ namespace StudentManager.Services
             return userDTOs;
         }
 
-        public IEnumerable<UserDTO> GetUsersByRole(long roleId)
+        public IEnumerable<UserDTO> GetUsersByRole(List<long> roleIds)
         {
             // Fetch users from the repository
-            var users = _userRepository.GetUsersByRole(roleId);
+            var users = _userRepository.GetUsersByRole(roleIds);
 
             // Map the User entities to UserDTO objects
             var userDTOs = users.Select(u => new UserDTO
@@ -125,89 +125,22 @@ namespace StudentManager.Services
             return userDTOs;
         }
 
-        public async Task<LoggedStudentDTO> GetLoggedStudentDetailAsync(long userId)
+        private string GenerateJwtToken(User user)
         {
-            // Fetch users from the repository
-            var StudentDetails = await _userRepository.GetLoggedStudentDetailAsync(userId);
-
-            if (StudentDetails == null)
-            {
-                return null;
-            }
-
-            // Map the fetched data to the DTOs
-            var loggedStudentDTO = new LoggedStudentDTO
-            {
-                UserId = StudentDetails.id_user,
-                StudentPhone = StudentDetails.Student.user_phone,
-                StudentEmail = StudentDetails.Student.user_email,
-                StudentDetails = new List<StudentDetailDTO>
-                {
-                    new StudentDetailDTO
-                    {
-                        StudentDetailsId = StudentDetails.id_student_details,
-                        StudentFirstName = StudentDetails.student_first_name,
-                        StudentMiddleName = StudentDetails.student_middle_name,
-                        StudentLastName = StudentDetails.student_last_name,
-                        StudentAddress1 = StudentDetails.student_address1,
-                        StudentAddress2 = StudentDetails.student_address2,
-                        StudentCity = StudentDetails.student_city,
-                        StudentDistrict = StudentDetails.student_district,
-                        StudentState = StudentDetails.student_state,
-                        StudentPIN = StudentDetails.student_pin,
-                        StudentFeebookGiven = StudentDetails.student_feebook_given,
-                        StudentCategory = new List<StudentCategoryDTO>
-                        {
-                            new StudentCategoryDTO
-                            {
-                                StudentCategoryId = StudentDetails.StudentCategory.id_student_category,
-                                StudentCategoryName = StudentDetails.StudentCategory.student_category_name
-                            }
-                        }
-                    }
-                },
-                StudentFees = StudentDetails.Student.StudentFees
-                    .Select(fees => new StudentFeesDTO
-                    {
-                        StudentFeesId = fees.id_student_fees,
-                        FeesForMonth = fees.fees_for_month,
-                        FeesForYear = fees.fees_for_year,
-                        FeeAmount = fees.fee_amount,
-                        FeeBookEntryDone = fees.feebook_entry_done
-                    }).ToList()
-            };
-
-            return loggedStudentDTO;
-        }
-
-        private async Task<string> GenerateJwtToken(string userPhone, string userEmail)
-        {
-            // Fetch the user information, including the role, from the repository
-            var user = await _userRepository.FindByEmailAsync(userEmail);
-
             if (user == null)
             {
                 // Handle the case where the user is not found
                 return null;
             }
 
-            // Retrieve the user's role from the repository
-            var role = await _userRepository.GetUserRole(user.id_role);
-
-            if (role == null)
-            {
-                // Handle the case where the role is not found
-                return null;
-            }
-
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Email, userEmail),
-                new Claim(ClaimTypes.MobilePhone, userPhone),
-                new Claim(ClaimTypes.Role, role.role_name),
+                new Claim(ClaimTypes.Email, user.user_email),
+                new Claim(ClaimTypes.MobilePhone, user.user_phone),
+                new Claim(ClaimTypes.Role, user.Role.role_name),
                 // Add more claims as needed
                 new Claim("userID", user.id_user.ToString()),
-                new Claim("roleID", role.id_role.ToString()),
+                new Claim("roleID", user.id_role.ToString()),
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("jL0fcjRKi3YVNYBEo2VjnDGf4k1sFpX8v2P3VKwnTVY="));

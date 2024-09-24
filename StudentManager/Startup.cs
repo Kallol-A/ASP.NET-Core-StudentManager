@@ -74,14 +74,19 @@ namespace StudentManager
             });
 
             // Register the service with the DI container
-            services.AddScoped<IRoleService, RoleService>();
-            services.AddScoped<IPermissionService, PermissionService>();
             services.AddScoped<IPasswordHasherService, PasswordHasherService>();
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IStudentService, StudentService>();
+            services.AddScoped<IFacultyService, FacultyService>();
+            services.AddScoped<ISecurityService, SecurityService>();
+            services.AddScoped<IInstituteService, InstituteService>();
+
             // Register the repository with the DI container
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IStudentRepository, StudentRepository>();
+            services.AddScoped<IFacultyRepository, FacultyRepository>();
+            services.AddScoped<ISecurityRepository, SecurityRepository>();
+            services.AddScoped<IInstituteRepository, InstituteRepository>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

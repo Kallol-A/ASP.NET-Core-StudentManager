@@ -8,14 +8,14 @@ namespace StudentManager.Repositories
 {
     public interface IUserRepository
     {
-        void InsertUser(User user);
-        void Save();
+        void InsertUserAsync(User user);
+        Task<bool> SaveAsync();
 
         Task<User> FindByEmailAsync(string userEmail);
-        Task<Role> GetUserRole(long id_role);
+        Task<User> GetUserById(long userId);
+        Task<Role> GetUserRole(long roleId);
         Task<IEnumerable<User>> GetUsersAsync();
-        IEnumerable<User> GetUsersByRole(long roleId);
+        IEnumerable<User> GetUsersByRole(List<long> roleIds);
         IEnumerable<User> GetUsersExceptRole(long roleId);
-        Task<StudentDetails> GetLoggedStudentDetailAsync(long userID);
     }
 }

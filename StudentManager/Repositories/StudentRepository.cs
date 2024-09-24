@@ -7,16 +7,15 @@ using Microsoft.EntityFrameworkCore;
 
 using StudentManager.Data;
 using StudentManager.Models;
-using StudentManager.Services;
 
 namespace StudentManager.Repositories
 {
-    public class StudentRepository : IStudentRepository
+    public class StudentRepository : BaseRepository, IStudentRepository
     {
-        private readonly AppDbContext _dbContext;
+        private new readonly AppDbContext _dbContext;
 
         // Constructor
-        public StudentRepository(AppDbContext dbContext)
+        public StudentRepository(AppDbContext dbContext) : base(dbContext)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         }
@@ -25,13 +24,6 @@ namespace StudentManager.Repositories
         {
             var validStudentCategory = studentcategory ?? throw new ArgumentNullException(nameof(studentcategory));
             await _dbContext.StudentCategory.AddAsync(validStudentCategory);
-        }
-
-        public async Task<bool> SaveAsync()
-        {
-            await _dbContext.SaveChangesAsync();
-
-            return true;
         }
 
         public async Task<IEnumerable<StudentCategory>> GetStudentCategoriesAsync(long? id)
@@ -64,6 +56,25 @@ namespace StudentManager.Repositories
 
             // Save the changes in the database
             _dbContext.StudentCategory.Update(filteredStudentCategory);
+        }
+
+        public async void InsertStudentDetailsAsync(StudentDetails studentdetails)
+        {
+            var validStudentDetails = studentdetails ?? throw new ArgumentNullException(nameof(studentdetails));
+            await _dbContext.StudentDetails.AddAsync(validStudentDetails);
+        }
+
+        public async Task<StudentDetails> GetLoggedStudentDetailAsync(long id)
+        {
+            // Fetch the student details along with related data using Entity Framework
+            var studentDetail = await _dbContext.StudentDetails
+                .Where(sd => sd.id_user == id && sd.deleted_at == null)
+                .Include(sd => sd.Student)                        // Load the Student navigation property
+                    .ThenInclude(s => s.StudentFees)              // Load the StudentFees navigation property within Student
+                .Include(sd => sd.StudentCategory)                // Load the StudentCategory navigation property
+                .FirstOrDefaultAsync();                           // Retrieve the first or default student details
+
+            return studentDetail;
         }
     }
 }

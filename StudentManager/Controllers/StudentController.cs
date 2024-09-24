@@ -21,27 +21,7 @@ namespace StudentManager.Controllers
             _studentService = studentService;
         }
 
-        [HttpPost("studentcategory")]
-        public async Task<IActionResult> InsertStudentCategoryAsync([FromBody] StudentCategory inputModel)
-        {
-            if (inputModel == null)
-            {
-                return BadRequest("Invalid input data.");
-            }
-
-            var result = await _studentService.InsertStudentCategoryAsync(inputModel.student_category_name, inputModel.created_by_user);
-
-            if (result)
-            {
-                return Ok("New student category added successfully");
-            }
-            else
-            {
-                return BadRequest("Failed to add new student category");
-            }
-        }
-
-        // GET api/studentcategory or api/studentcategory/{id}
+        // GET api/student/studentcategory/ or api/student/studentcategory/{id}
         [HttpGet("studentcategory/{id?}")]
         public async Task<ActionResult<IEnumerable<StudentCategoryDTO>>> GetStudentCategoriesAsync(long? id)
         {
@@ -55,21 +35,96 @@ namespace StudentManager.Controllers
             return Ok(studentCategories);
         }
 
-        // PUT api/studentcategory/{id}
+        // POST api/student/studentcategory/
+        [HttpPost("studentcategory")]
+        public async Task<IActionResult> InsertStudentCategoryAsync([FromBody] StudentCategory inputModel)
+        {
+            if (inputModel == null)
+            {
+                return BadRequest("Invalid input data.");
+            }
+
+            var result = await _studentService.InsertStudentCategoryAsync(inputModel);
+
+            if (result)
+            {
+                return Ok("New student category added successfully");
+            }
+            else
+            {
+                return BadRequest("Failed to add new student category");
+            }
+        }
+
+        // PUT api/student/studentcategory/{id}
         [HttpPut("studentcategory/{id}")]
         public async Task<IActionResult> UpdateStudentCategoryAsync(long id, [FromBody] StudentCategory inputModel)
         {
             // Call the Update method in the service
-            var result = await _studentService.UpdateStudentCategoryAsync(id,
-                                                    inputModel.student_category_name,
-                                                    inputModel.last_updated_by_user);
+            var result = await _studentService.UpdateStudentCategoryAsync(id, inputModel);
 
             if (!result)
             {
-                return NotFound("Failed to add new student category");
+                return NotFound("Failed to update student category");
             }
 
             return Ok("Student category updated successfully");
+        }
+
+        // POST /api/student/detail/
+        [HttpPost("detail")]
+        public async Task<IActionResult> InsertStudentDetailsAsync([FromBody] StudentDetails inputModel)
+        {
+            var validationresult = await _studentService.IsStudent(inputModel);
+            if (validationresult == false)
+            {
+                return BadRequest("User not a registered student in the system");
+            }
+
+
+            if (inputModel == null)
+            {
+                return BadRequest("Invalid input data");
+            }
+
+            var result = await _studentService.InsertStudentDetailsAsync(inputModel);
+
+            if (result)
+            {
+                return Ok("New student details data added successfully");
+            }
+            else
+            {
+                return BadRequest("Failed to add new student details data");
+            }
+        }
+
+        // GET api/student/logged_student_detail
+        [HttpGet("logged_student_detail")]
+        public async Task<ActionResult<LoggedStudentDTO>> GetLoggedStudentDetailsAsync()
+        {
+            var roleIDClaim = User.FindFirst("roleID");
+            if (roleIDClaim == null || !int.TryParse(roleIDClaim.Value, out var roleID) || roleID != 2)
+            {
+                return NotFound("Logged user is not a student.");
+            }
+
+            // Extract userID from the JWT token in the Authorization Header
+            var userIDClaim = User.FindFirst("userID");
+            if (userIDClaim == null || !long.TryParse(userIDClaim.Value, out var userID))
+            {
+                return Unauthorized();
+            }
+
+            // Get the user details from the service
+            var LoggedStudentDTO = await _studentService.GetLoggedStudentDetailAsync(userID);
+
+            if (LoggedStudentDTO == null)
+            {
+                return NotFound("No records found");
+            }
+
+            return Ok(LoggedStudentDTO);
         }
     }
 }

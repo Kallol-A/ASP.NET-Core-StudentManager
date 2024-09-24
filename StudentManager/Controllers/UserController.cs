@@ -34,7 +34,12 @@ namespace StudentManager.Controllers
                 }
                 else if (roleID == 2)
                 {
-                    var filteredUsers = _userService.GetUsersByRole(2);
+                    var filteredUsers = _userService.GetUsersByRole(new List<long> { 2 });
+                    return Ok(filteredUsers);
+                }
+                else if (roleID == 5)
+                {
+                    var filteredUsers = _userService.GetUsersByRole(new List<long> { 2,5 });
                     return Ok(filteredUsers);
                 }
                 else
@@ -47,34 +52,6 @@ namespace StudentManager.Controllers
             // Fallback if no filtered list is available (shouldn't happen)
             var users = await _userService.GetUsersAsync();
             return Ok(users);
-        }
-
-        // GET api/user/logged_student_detail
-        [HttpGet("logged_student_detail")]
-        public async Task<ActionResult<LoggedStudentDTO>> GetLoggedStudentDetailsAsync()
-        {
-            var roleIDClaim = User.FindFirst("roleID");
-            if (roleIDClaim == null || !int.TryParse(roleIDClaim.Value, out var roleID) || roleID != 2)
-            {
-                return NotFound("Logged user is not a student.");
-            }
-
-            // Extract userID from the JWT token in the Authorization Header
-            var userIDClaim = User.FindFirst("userID");
-            if (userIDClaim == null || !long.TryParse(userIDClaim.Value, out var userID))
-            {
-                return Unauthorized();
-            }
-
-            // Get the user details from the service
-            var LoggedStudentDTO = await _userService.GetLoggedStudentDetailAsync(userID);
-
-            if (LoggedStudentDTO == null)
-            {
-                return NotFound("No records found");
-            }
-
-            return Ok(LoggedStudentDTO);
         }
     }
 }

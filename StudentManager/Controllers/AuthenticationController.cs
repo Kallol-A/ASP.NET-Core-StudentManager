@@ -26,10 +26,11 @@ namespace StudentManager.Controllers
             _userService = userService;
         }
 
+        // GET api/auth/user/login
         [HttpPost("user/login")]
-        public async Task<IActionResult> UserLogin([FromBody] LoginRequest request)
+        public async Task<IActionResult> UserLogin([FromBody] User inputModel)
         {
-            var result = await _userService.LoginUser(request.Email, request.Password);
+            var result = await _userService.LoginUser(inputModel);
 
             if (result.Success)
             {
@@ -39,31 +40,25 @@ namespace StudentManager.Controllers
             return new ObjectResult(new { message = result.Message }) { StatusCode = 401 };
         }
 
+        // POST api/auth/user/register
         [HttpPost("user/register")]
-        public ActionResult<bool> UserRegister([FromBody] User inputModel)
+        public async Task<IActionResult> UserRegister([FromBody] User inputModel)
         {
             if (inputModel == null)
             {
                 return BadRequest("Invalid input data.");
             }
 
-            bool result = _userService.InsertUser(inputModel.id_role, inputModel.user_phone, inputModel.user_email,
-                inputModel.user_password, inputModel.created_by_user);
+            var result = await _userService.InsertUserAsync(inputModel);
 
             if (result)
             {
-                return Ok(result);
+                return Ok("User registered successfully");
             }
             else
             {
                 return BadRequest("Failed to register new user.");
             }
         }
-    }
-
-    public class LoginRequest
-    {
-        public string Email { get; set; }
-        public string Password { get; set; }
     }
 }
